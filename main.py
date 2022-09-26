@@ -2,6 +2,7 @@ from chessdotcom import get_player_game_archives
 import pprint
 import requests
 from stockfish import Stockfish
+import chess
 
 stockfish = Stockfish(r'C:\Users\ellio\Downloads\stockfish-11-win\stockfish-11-win\Windows\stockfish_20011801_x64.exe')
 printer = pprint.PrettyPrinter()
@@ -46,3 +47,46 @@ black = {
 }
 
 game = get_most_recent_game("elichtman1")
+
+def get_san(pgnString):
+    san = []
+
+    currentTwo = "__"
+    currentMove = ""
+    addToMove = False
+    for letter in pgnString:
+
+        currentTwo += letter
+        currentTwo = currentTwo[1:]
+
+        if letter == " " and addToMove == True:
+            san.append(currentMove)
+            currentMove = ""
+            addToMove = False
+
+        elif addToMove:
+            currentMove += letter
+
+        else:
+            if currentTwo == ". ":
+                addToMove = True
+
+    return san
+
+def get_uci(san):
+    moves = []
+    board = chess.Board()
+
+    for move in san:
+        moves.append(board.push_san(move))
+
+    return moves
+
+uci = get_uci(get_san(game))
+
+stockfish.set_position(uci)
+
+print(stockfish.get_best_move())
+
+
+
