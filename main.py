@@ -1,3 +1,3 @@
 from stockfish import Stockfish
 
-print("it's working")
+stockfish = Stockfish(r'C:\Users\ellio\Downloads\stockfish-11-win\stockfish-11-win\Windows\stockfish_20011801_x64.exe')
