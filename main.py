@@ -180,6 +180,11 @@ def drawPieces(board):
         pieceCounter += 1
 
 def drawEval(currentEval, screen):
+    if currentEval['type'] == 'mate':
+        currentEval = "GG"
+    else:
+        currentEval = str(currentEval["value"]/100)
+
     font = pygame.font.Font("freesansbold.ttf", 60)
 
     text = font.render(str(currentEval), True, (0, 0, 0))
@@ -403,7 +408,7 @@ while running:
 
     #print(prevBestHighlight)
     drawBackground()
-    drawEval((currentEval['value']/100), screen)
+    drawEval((currentEval), screen)
     drawBestMove(currentBestMove, screen)
     if moveHighlight != "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG":
         if computerMove:
