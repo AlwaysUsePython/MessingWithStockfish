@@ -4,6 +4,7 @@ import requests
 from stockfish import Stockfish
 import chess
 import pygame
+pygame.init()
 
 stockfish = Stockfish(r'C:\Users\ellio\Downloads\stockfish-11-win\stockfish-11-win\Windows\stockfish_20011801_x64.exe')
 printer = pprint.PrettyPrinter()
@@ -14,10 +15,12 @@ def get_most_recent_game(username):
     data = get_player_game_archives(username).json
     url = data['archives'][-1]
     games = requests.get(url).json()
-    game = games['games'][-1]
+    game = games['games'][-2]
     return game['pgn']
 
-game = get_most_recent_game("allpraiseamgm")
+username = input("Whose account? ")
+
+game = get_most_recent_game(username)
 
 def get_san(pgnString):
     san = []
@@ -155,6 +158,16 @@ def drawPieces(board):
             screen.blit(BKing, (80*col, 80*row))
         pieceCounter += 1
 
+def drawEval(currentEval, screen):
+    font = pygame.font.Font("freesansbold.ttf", 60)
+
+    text = font.render(str(currentEval), True, (0, 0, 0))
+    rect = text.get_rect()
+    rect.center = (820, 213)
+    screen.blit(text, rect)
+
+
+
 def convertFenToElliot(fenStr):
     conversions = {
         "P":"0",
@@ -188,6 +201,9 @@ def convertFenToElliot(fenStr):
 print(stockfish.get_fen_position())
 currentElliot = convertFenToElliot(stockfish.get_fen_position())#"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
 
+currentMove = len(uci)-1
+currentEval = stockfish.get_evaluation()
+
 running = True
 while running:
     for event in pygame.event.get():
@@ -196,6 +212,38 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 running = False
+
+            if event.key == pygame.K_s:
+                currentMove = 0
+                stockfish.set_position([])
+                currentEval = stockfish.get_evaluation()
+                currentElliot = convertFenToElliot(stockfish.get_fen_position())
+
+            if event.key == pygame.K_LEFT and currentMove > 0:
+                currentMove -= 1
+
+                newMoves = []
+                for i in range(currentMove):
+                    newMoves.append(uci[i])
+
+                stockfish.set_position(newMoves)
+                currentEval = stockfish.get_evaluation()
+                currentElliot = convertFenToElliot(stockfish.get_fen_position())
+
+            if event.key == pygame.K_RIGHT and currentMove < len(uci):
+                currentMove += 1
+
+                newMoves = []
+                for i in range(currentMove):
+                    newMoves.append(uci[i])
+
+                stockfish.set_position(newMoves)
+                currentEval = stockfish.get_evaluation()
+                currentElliot = convertFenToElliot(stockfish.get_fen_position())
+
+
+
     drawBackground()
+    drawEval(currentEval['value'], screen)
     drawPieces(currentElliot)
     pygame.display.update()
