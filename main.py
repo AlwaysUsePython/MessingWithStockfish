@@ -226,12 +226,12 @@ def convertFenToElliot(fenStr):
     return elliotStr
 
 #####################
-print(stockfish.get_fen_position())
+#print(stockfish.get_fen_position())
 currentElliot = convertFenToElliot(stockfish.get_fen_position())#"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
 
 def getMoveHighlight(previousMove, goodMove, computerMove):
     previousMove = str(previousMove)
-    print(previousMove)
+    #print(previousMove)
     if computerMove:
         symbol1 = "c"
         symbol2 = "C"
@@ -248,7 +248,7 @@ def getMoveHighlight(previousMove, goodMove, computerMove):
     row1 = 8-(int(previousMove[1]))
     row2 = 8-(int(previousMove[3]))
 
-    print(row1, row2, col1, col2)
+    #print(row1, row2, col1, col2)
 
     retStr = ""
     found = False
@@ -261,15 +261,28 @@ def getMoveHighlight(previousMove, goodMove, computerMove):
             found = True
         else:
             retStr += symbol2
-    print(retStr)
+    #print(retStr)
     return retStr
 
+def judgeMove(moves, currentMove):
+    moveList = []
+    for i in range(currentMove-1):
+        moveList.append(moves[i])
+    stockfish.set_position(moveList)
+    bestMove = stockfish.get_best_move()
+    if str(bestMove) == moves[currentMove]:
+        return True
 
+    bestMoves = stockfish.get_top_moves()
+    approved = []
+    for move in bestMoves:
+        approved.append(move['Move'])
+    return str(moves[currentMove - 1]) in approved
 
 currentMove = len(uci)-1
 currentEval = stockfish.get_evaluation()
 currentBestMove = stockfish.get_best_move()
-goodMove = stockfish.is_move_correct(currentMove)
+goodMove = judgeMove(uci, currentMove)
 computerMove = False
 moveHighlight = getMoveHighlight(str(uci[currentMove]), goodMove, computerMove)
 
@@ -296,9 +309,13 @@ while running:
                 newMoves = []
                 for i in range(currentMove):
                     newMoves.append(uci[i])
-                pastMove = newMoves[-1]
-                goodMove = stockfish.is_move_correct(pastMove)
-                moveHighlight = getMoveHighlight(pastMove, goodMove, computerMove)
+                try:
+                    pastMove = newMoves[-1]
+                    goodMove = judgeMove(uci, currentMove)
+                    moveHighlight = getMoveHighlight(pastMove, goodMove, computerMove)
+                except:
+                    moveHighlight = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
+
                 stockfish.set_position(newMoves)
                 currentEval = stockfish.get_evaluation()
                 currentBestMove = stockfish.get_best_move()
@@ -313,7 +330,7 @@ while running:
 
                 try:
                     pastMove = newMoves[-1]
-                    goodMove = stockfish.is_move_correct(pastMove)
+                    goodMove = judgeMove(uci, currentMove)
                     moveHighlight = getMoveHighlight(pastMove, goodMove, computerMove)
                 except:
                     moveHighlight = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
@@ -336,6 +353,16 @@ while running:
                     pass
 
             if event.key == pygame.K_r:
+                computerMove = False
+                newMoves = []
+                for i in range(currentMove):
+                    newMoves.append(uci[i])
+                try:
+                    pastMove = newMoves[-1]
+                    goodMove = judgeMove(uci, currentMove)
+                    moveHighlight = getMoveHighlight(pastMove, goodMove, computerMove)
+                except:
+                    moveHighlight = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
                 stockfish.set_position(newMoves)
                 currentEval = stockfish.get_evaluation()
                 currentBestMove = stockfish.get_best_move()
