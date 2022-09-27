@@ -15,7 +15,7 @@ def get_most_recent_game(username):
     data = get_player_game_archives(username).json
     url = data['archives'][-1]
     games = requests.get(url).json()
-    game = games['games'][-2]
+    game = games['games'][-4]
     return game['pgn']
 
 username = input("Whose account? ")
@@ -97,7 +97,7 @@ WQueen = pygame.transform.scale(WQueen, (80, 80))
 WRook = pygame.transform.scale(WRook, (80, 80))
 def drawBackground():
     # Colors in the black squares
-    screen.fill((90, 60, 50))
+    screen.fill((76,116,156))
 
     pygame.draw.rect(screen, (200, 200, 200), pygame.Rect(640, 0, 360, 640))
     pygame.draw.rect(screen, (100, 100, 100), pygame.Rect(715, 158, 210, 110))
@@ -121,7 +121,7 @@ def drawBackground():
         for c in range(8):
             if color:
                 color = False
-                pygame.draw.rect(screen, (200, 170, 160), pygame.Rect(r * 80, c * 80, 80, 80))
+                pygame.draw.rect(screen, (236,236,212), pygame.Rect(r * 80, c * 80, 80, 80))
             else:
                 color = True
 
@@ -244,6 +244,6 @@ while running:
 
 
     drawBackground()
-    drawEval(currentEval['value'], screen)
+    drawEval((currentEval['value']/100), screen)
     drawPieces(currentElliot)
     pygame.display.update()
