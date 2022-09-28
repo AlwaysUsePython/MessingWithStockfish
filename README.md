@@ -1,4 +1,4 @@
-# MessingWithStockfish
+# Chess.com Clone
 
 This program uses the python chess.com api to access a given user's most recent game and then walk the user through a step by step analysis.
 
@@ -23,3 +23,8 @@ If that all works first try, you're a better programmer than I am!
  - differentiate blunders from inaccuracies
      - eval change by more than x%? constant threshold?
      - need to keep track of whose turn it is
+ 
+ - create replacement for chess.com's Coach "That game was a gift!" David
+     - come up with funny name?
+     - message indicating who won - profile picture? updates as game goes on? 
+     - practice game feature where you play agianst \[name undecided\]? 
