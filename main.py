@@ -9,7 +9,7 @@ pygame.init()
 stockfish = Stockfish(r'C:\Users\ellio\Downloads\stockfish-11-win\stockfish-11-win\Windows\stockfish_20011801_x64.exe')
 printer = pprint.PrettyPrinter()
 
-
+stockfish._set_option("Slow Mover", 30, True)
 
 def get_most_recent_game(username):
     data = get_player_game_archives(username).json
@@ -21,6 +21,14 @@ def get_most_recent_game(username):
 username = input("Whose account? ")
 
 game = get_most_recent_game(username)
+#printer.pprint(game)
+colorStart = game.index(username)
+colorLetter = game[colorStart - 3]
+
+if colorLetter == "k":
+    print(username, "was Black")
+else:
+    print(username, "was White")
 
 def get_san(pgnString):
     san = []
@@ -55,6 +63,53 @@ def get_uci(san):
         moves.append(board.push_san(move))
 
     return moves
+
+
+def getMissingPieces(fenStr):
+    whitePieces = "RRNNBBKQPPPPPPPP"
+    blackPieces = "rrnnbbkqpppppppp"
+
+    scores = {
+        "R": 5,
+        "r": -5,
+        "N": 3,
+        "n": -3,
+        "B": 3,
+        "b": -3,
+        "Q": 9,
+        "q": -9,
+        "K": 0,
+        "k": 0,
+        "P": 1,
+        "p": -1
+    }
+    score = 0
+    for piece in fenStr:
+        if piece in whitePieces:
+            newWhitePieces = ""
+            taken = False
+            for p in whitePieces:
+                if p != piece or taken:
+                    newWhitePieces += p
+                else:
+                    taken = True
+            whitePieces = newWhitePieces
+            score += scores[piece]
+        if piece in blackPieces:
+            newBlackPieces = ""
+            taken = False
+            for p in blackPieces:
+                if p != piece or taken:
+                    newBlackPieces += p
+                else:
+                    taken = True
+            blackPieces = newBlackPieces
+            score += scores[piece]
+        if piece == " ":
+            break
+
+    return [score, whitePieces, blackPieces]
+
 
 uci = get_uci(get_san(game))
 
@@ -95,6 +150,71 @@ WKnight = pygame.transform.scale(WKnight, (80, 80))
 WPawn = pygame.transform.scale(WPawn, (80, 80))
 WQueen = pygame.transform.scale(WQueen, (80, 80))
 WRook = pygame.transform.scale(WRook, (80, 80))
+
+# and the mini ones
+mBBishop = pygame.transform.scale(BBishop, (40, 40))
+mBKing = pygame.transform.scale(BKing, (40, 40))
+mBKnight = pygame.transform.scale(BKnight, (40, 40))
+mBPawn = pygame.transform.scale(BPawn, (40, 40))
+mBQueen = pygame.transform.scale(BQueen, (40, 40))
+mBRook = pygame.transform.scale(BRook, (40, 40))
+
+mWBishop = pygame.transform.scale(WBishop, (40, 40))
+mWKing = pygame.transform.scale(WKing, (40, 40))
+mWKnight = pygame.transform.scale(WKnight, (40, 40))
+mWPawn = pygame.transform.scale(WPawn, (40, 40))
+mWQueen = pygame.transform.scale(WQueen, (40, 40))
+mWRook = pygame.transform.scale(WRook, (40, 40))
+
+
+def drawMinis(screen, score):
+    imgs = {
+        "R":mWRook,
+        "r":mBRook,
+        "N":mWKnight,
+        "n":mBKnight,
+        "B":mWBishop,
+        "b":mBBishop,
+        "Q":mWQueen,
+        "q":mBQueen,
+        "P":mWPawn,
+        "p":mBPawn
+    }
+
+    whiteCoords = [660, 20]
+
+    for piece in score[1]:
+        screen.blit(imgs[piece], (whiteCoords[0], whiteCoords[1]))
+        whiteCoords[0] += 40
+        if whiteCoords[0] > 960:
+            whiteCoords[0] = 660
+            whiteCoords[1] += 50
+
+    blackCoords = [660, 500]
+    for piece in score[2]:
+        screen.blit(imgs[piece], (blackCoords[0], blackCoords[1]))
+        blackCoords[0] += 40
+        if blackCoords[0] > 960:
+            blackCoords[0] = 660
+            blackCoords[1] += 50
+
+    font = pygame.font.Font("freesansbold.ttf", 20)
+
+    if score[0] > 0:
+        text = "+" + str(score[0])
+        text = font.render(text, True, (100, 100, 100))
+        rect = text.get_rect()
+        rect.center = (blackCoords[0]+20, blackCoords[1]+20)
+        screen.blit(text, rect)
+
+    elif score[0] < 0:
+        text = "+" + str(-score[0])
+        text = font.render(text, True, (100, 100, 100))
+        rect = text.get_rect()
+        rect.center = (whiteCoords[0]+20, whiteCoords[1]+20)
+        screen.blit(text, rect)
+
+
 def drawBackground():
     # Colors in the black squares
     screen.fill((76,116,156))
@@ -353,7 +473,10 @@ while running:
 
                 try:
                     pastMove = newMoves[-1]
-                    goodMove = judgeMove(uci, currentMove)
+                    if str(pastMove) == computerMove:
+                        goodMove = True
+                    else:
+                        goodMove = judgeMove(uci, currentMove)
                     moveHighlight = getMoveHighlight(pastMove, goodMove, computerMove, False)
                 except:
                     moveHighlight = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
@@ -430,6 +553,9 @@ while running:
                          pygame.Rect(prevBestHighlight.index("e") % 8 * 80, prevBestHighlight.index("e") // 8 * 80, 80, 80))
         pygame.draw.rect(screen, (100, 200, 200),
                          pygame.Rect(prevBestHighlight.index("E") % 8 * 80, prevBestHighlight.index("E") // 8 * 80, 80, 80))
+
+    missingPieces = getMissingPieces(stockfish.get_fen_position())
+    drawMinis(screen, missingPieces)
 
     drawSquareNames(screen)
     drawPieces(currentElliot)
