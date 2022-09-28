@@ -413,6 +413,7 @@ stockfish.make_moves_from_current_position([uci[len(uci)-1]])
 
 currentMove = len(uci)
 currentEval = stockfish.get_evaluation()
+prevEval = currentEval
 currentBestMove = stockfish.get_best_move()
 goodMove = judgeMove(uci, currentMove)
 computerMove = False
@@ -434,6 +435,7 @@ while running:
                 prevBestHighlight = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
                 currentMove = 0
                 stockfish.set_position([])
+                prevEval = 0.67
                 currentEval = stockfish.get_evaluation()
                 currentBestMove = stockfish.get_best_move()
                 prevBestHighlight = getMoveHighlight(currentBestMove, False, False, True)
@@ -444,12 +446,28 @@ while running:
                 newMoves = []
                 for i in range(currentMove - 1):
                     newMoves.append(uci[i])
+
                 stockfish.set_position(newMoves)
                 currentBestMove = stockfish.get_best_move()
-                newMoves.append(uci[currentMove - 1])
                 try:
-                    pastMove = newMoves[-1]
-                    goodMove = judgeMove(uci, currentMove)
+                    pastMove = uci[currentMove-1]
+                    stockfish.make_moves_from_current_position(computerMove)
+                    #print("computer moved")
+                    bestEval = stockfish.get_evaluation()
+                    stockfish.set_position(newMoves)
+                    #print("reset")
+                    #print(stockfish.get_board_visual())
+                    #print(uci[currentMove-1])
+                    stockfish.make_moves_from_current_position([str(uci[currentMove-1])])
+                    #print("player move")
+                    evalDifference = bestEval['value'] - stockfish.get_evaluation()['value']
+                    if abs(evalDifference) > 100:
+                        goodMove = False
+                    else:
+                        goodMove = True
+                    #goodMove = judgeMove(uci, currentMove)
+                    stockfish.set_position(newMoves)
+                    #print("reset")
                     moveHighlight = getMoveHighlight(pastMove, goodMove, computerMove, False)
                 except:
                     moveHighlight = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
@@ -457,9 +475,12 @@ while running:
                 prevBestHighlight = getMoveHighlight(currentBestMove, False, False, True)
 
                 try:
+                    stockfish.set_position(newMoves)
                     stockfish.make_moves_from_current_position([uci[currentMove - 1]])
+                    newMoves.append(uci[currentMove-1])
                 except:
                     stockfish.set_position([])
+
                 currentEval = stockfish.get_evaluation()
                 currentBestMove = stockfish.get_best_move()
                 currentElliot = convertFenToElliot(stockfish.get_fen_position())
@@ -471,19 +492,27 @@ while running:
                 for i in range(currentMove):
                     newMoves.append(uci[i])
 
+                stockfish.set_position(newMoves)
+                prevEval = currentEval
+                currentEval = stockfish.get_evaluation()
+
+
                 try:
                     pastMove = newMoves[-1]
-                    if str(pastMove) == computerMove:
+                    deltaEval = currentEval['value'] - prevEval['value']
+                    if abs(deltaEval) >= 100:
+                        goodMove = False
+                    elif str(pastMove) == computerMove:
                         goodMove = True
                     else:
-                        goodMove = judgeMove(uci, currentMove)
+                        goodMove = True
                     moveHighlight = getMoveHighlight(pastMove, goodMove, computerMove, False)
                 except:
                     moveHighlight = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
                     prevBestHighlight = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
-
                 stockfish.set_position(newMoves)
-                currentEval = stockfish.get_evaluation()
+
+
                 prevBestHighlight = getMoveHighlight(currentBestMove, False, False, True)
 
                 currentBestMove = stockfish.get_best_move()
