@@ -354,10 +354,13 @@ def convertFenToElliot(fenStr):
 #print(stockfish.get_fen_position())
 currentElliot = convertFenToElliot(stockfish.get_fen_position())#"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
 
-def getMoveHighlight(previousMove, goodMove, computerMove, bestMove):
+def getMoveHighlight(previousMove, goodMove, computerMove, bestMove, inaccuracy):
     previousMove = str(previousMove)
     #print(previousMove)
-    if bestMove:
+    if inaccuracy:
+        symbol1 = "o"
+        symbol2 = "O"
+    elif bestMove:
         symbol1 = "e"
         symbol2 = "E"
     elif computerMove:
@@ -418,9 +421,10 @@ prevEval = currentEval
 currentBestMove = stockfish.get_best_move()
 goodMove = judgeMove(uci, currentMove)
 computerMove = False
-moveHighlight = getMoveHighlight(str(uci[currentMove-1]), goodMove, computerMove, False)
+inaccuracy = False
+moveHighlight = getMoveHighlight(str(uci[currentMove-1]), goodMove, computerMove, False, False)
 prevBestHighlight = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
-prevBestHighlight = getMoveHighlight(prevBestMove, False, False, True)
+prevBestHighlight = getMoveHighlight(prevBestMove, False, False, True, False)
 
 running = True
 while running:
@@ -439,7 +443,7 @@ while running:
                 prevEval = 0.67
                 currentEval = stockfish.get_evaluation()
                 currentBestMove = stockfish.get_best_move()
-                prevBestHighlight = getMoveHighlight(currentBestMove, False, False, True)
+                prevBestHighlight = getMoveHighlight(currentBestMove, False, False, True, False)
                 currentElliot = convertFenToElliot(stockfish.get_fen_position())
 
             if event.key == pygame.K_LEFT and currentMove > 0:
@@ -461,25 +465,38 @@ while running:
                     #print(uci[currentMove-1])
                     stockfish.make_moves_from_current_position([str(uci[currentMove-1])])
                     #print("player move")
-                    evalDifference = bestEval['value'] - stockfish.get_evaluation()['value']
-
-                    if abs(evalDifference) > 100:
-                        if currentMove % 2 == 1:
-                            if evalDifference > 100:
-                                goodMove = False
-                        else:
-                            if evalDifference < -100:
-                                goodMove = False
+                    eval = stockfish.get_evaluation()
+                    if bestEval['type'] != eval['type']:
+                        goodMove = False
+                        inaccuracy = False
                     else:
-                        goodMove = True
+                        evalDifference = bestEval['value'] - eval['value']
+                        inaccuracy = False
+                        if abs(evalDifference) > 100:
+                            if currentMove % 2 == 1:
+                                if evalDifference > 200:
+                                    goodMove = False
+                                    inaccuracy = False
+                                elif evalDifference > 100:
+                                    goodMove = False
+                                    inaccuracy = True
+                            else:
+                                if evalDifference < -200:
+                                    goodMove = False
+                                    inaccuracy = False
+                                elif evalDifference < -100:
+                                    goodMove = False
+                                    inaccuracy = True
+                        else:
+                            goodMove = True
                     #goodMove = judgeMove(uci, currentMove)
                     stockfish.set_position(newMoves)
                     #print("reset")
-                    moveHighlight = getMoveHighlight(pastMove, goodMove, computerMove, False)
+                    moveHighlight = getMoveHighlight(pastMove, goodMove, computerMove, False, inaccuracy)
                 except:
                     moveHighlight = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
 
-                prevBestHighlight = getMoveHighlight(currentBestMove, False, False, True)
+                prevBestHighlight = getMoveHighlight(currentBestMove, False, False, True, False)
 
                 try:
                     stockfish.set_position(newMoves)
@@ -506,26 +523,39 @@ while running:
 
                 try:
                     pastMove = newMoves[-1]
-                    deltaEval = currentEval['value'] - prevEval['value']
-                    if abs(evalDifference) > 100:
-                        if currentMove % 2 == 1:
-                            if evalDifference > 100:
-                                goodMove = False
-                            else:
-                                if evalDifference < -100:
-                                    goodMove = False
-                    elif str(pastMove) == computerMove:
-                        goodMove = True
+                    if currentEval['type'] != prevEval['type']:
+                        goodMove = False
+                        inaccuracy = False
                     else:
-                        goodMove = True
-                    moveHighlight = getMoveHighlight(pastMove, goodMove, computerMove, False)
+                        evalDifference = prevEval['value'] - currentEval['value']
+                        inaccuracy = False
+                        if abs(evalDifference) > 100:
+                            if currentMove % 2 == 1:
+                                if evalDifference > 200:
+                                    goodMove = False
+                                    inaccuracy = False
+                                elif evalDifference > 100:
+                                    goodMove = False
+                                    inaccuracy = True
+                            else:
+                                if evalDifference < -200:
+                                    goodMove = False
+                                    inaccuracy = False
+                                elif evalDifference < -100:
+                                    goodMove = False
+                                    inaccuracy = True
+                        elif str(pastMove) == computerMove:
+                            goodMove = True
+                        else:
+                            goodMove = True
+                    moveHighlight = getMoveHighlight(pastMove, goodMove, computerMove, False, inaccuracy)
                 except:
                     moveHighlight = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
                     prevBestHighlight = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
                 stockfish.set_position(newMoves)
 
 
-                prevBestHighlight = getMoveHighlight(currentBestMove, False, False, True)
+                prevBestHighlight = getMoveHighlight(currentBestMove, False, False, True, False)
 
                 currentBestMove = stockfish.get_best_move()
                 currentElliot = convertFenToElliot(stockfish.get_fen_position())
@@ -535,7 +565,7 @@ while running:
                 try:
                     computerMove = True
                     newBest = stockfish.get_best_move()
-                    moveHighlight = getMoveHighlight(newBest, True, computerMove, False)
+                    moveHighlight = getMoveHighlight(newBest, True, computerMove, False, False)
                     stockfish.make_moves_from_current_position([newBest])
                     currentEval = stockfish.get_evaluation()
                     currentBestMove = stockfish.get_best_move()
@@ -546,28 +576,65 @@ while running:
             if event.key == pygame.K_r:
                 computerMove = False
                 newMoves = []
-                for i in range(currentMove-1):
+                for i in range(currentMove - 1):
                     newMoves.append(uci[i])
+
                 stockfish.set_position(newMoves)
                 currentBestMove = stockfish.get_best_move()
-                newMoves.append(uci[currentMove-1])
                 try:
-                    pastMove = newMoves[-1]
-                    goodMove = judgeMove(uci, currentMove)
-                    moveHighlight = getMoveHighlight(pastMove, goodMove, computerMove, False)
+                    pastMove = uci[currentMove - 1]
+                    stockfish.make_moves_from_current_position(computerMove)
+                    # print("computer moved")
+                    bestEval = stockfish.get_evaluation()
+                    stockfish.set_position(newMoves)
+                    # print("reset")
+                    # print(stockfish.get_board_visual())
+                    # print(uci[currentMove-1])
+                    stockfish.make_moves_from_current_position([str(uci[currentMove - 1])])
+                    # print("player move")
+                    eval = stockfish.get_evaluation()
+                    if bestEval['type'] != eval['type']:
+                        goodMove = False
+                        inaccuracy = False
+                    else:
+                        evalDifference = bestEval['value'] - eval['value']
+                        inaccuracy = False
+                        if abs(evalDifference) > 100:
+                            if currentMove % 2 == 1:
+                                if evalDifference > 200:
+                                    goodMove = False
+                                    inaccuracy = False
+                                elif evalDifference > 100:
+                                    goodMove = False
+                                    inaccuracy = True
+                            else:
+                                if evalDifference < -200:
+                                    goodMove = False
+                                    inaccuracy = False
+                                elif evalDifference < -100:
+                                    goodMove = False
+                                    inaccuracy = True
+                        else:
+                            goodMove = True
+                    # goodMove = judgeMove(uci, currentMove)
+                    stockfish.set_position(newMoves)
+                    # print("reset")
+                    moveHighlight = getMoveHighlight(pastMove, goodMove, computerMove, False, inaccuracy)
                 except:
                     moveHighlight = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
 
-                prevBestHighlight = getMoveHighlight(currentBestMove, False, False, True)
+                prevBestHighlight = getMoveHighlight(currentBestMove, False, False, True, False)
 
                 try:
-                    stockfish.make_moves_from_current_position([uci[currentMove-1]])
+                    stockfish.set_position(newMoves)
+                    stockfish.make_moves_from_current_position([uci[currentMove - 1]])
+                    newMoves.append(uci[currentMove - 1])
                 except:
                     stockfish.set_position([])
+
                 currentEval = stockfish.get_evaluation()
                 currentBestMove = stockfish.get_best_move()
                 currentElliot = convertFenToElliot(stockfish.get_fen_position())
-
 
 
     #print(prevBestHighlight)
@@ -579,6 +646,12 @@ while running:
             pygame.draw.rect(screen, (100, 100, 200), pygame.Rect(moveHighlight.index("c") % 8 * 80, moveHighlight.index("c") // 8 * 80, 80, 80))
             pygame.draw.rect(screen, (100, 100, 200),
                              pygame.Rect(moveHighlight.index("C") % 8 * 80, moveHighlight.index("C") // 8 * 80, 80, 80))
+        elif inaccuracy:
+            pygame.draw.rect(screen, (200, 150, 100),
+                             pygame.Rect(moveHighlight.index("o") % 8 * 80, moveHighlight.index("o") // 8 * 80, 80, 80))
+            pygame.draw.rect(screen, (200, 150, 100),
+                             pygame.Rect(moveHighlight.index("O") % 8 * 80, moveHighlight.index("O") // 8 * 80, 80, 80))
+
         elif goodMove:
             pygame.draw.rect(screen, (100, 200, 100),
                      pygame.Rect(moveHighlight.index("y") % 8 * 80, moveHighlight.index("y") // 8 * 80, 80, 80))
