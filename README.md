@@ -15,16 +15,9 @@ Now the fun part: you need to download a version of stockfish. Copy the file pat
 If that all works first try, you're a better programmer than I am!
 
 # Elliot's Todo List / Brainstorming
-
- - dictionary that stores things that have already been evaluated
-     - each stage of the game when generating the board?
-     - already calculated move highlights?
-     
- - differentiate blunders from inaccuracies
-     - eval change by more than x%? constant threshold?
-     - need to keep track of whose turn it is
  
  - create replacement for chess.com's Coach "That game was a gift!" David
      - come up with funny name?
      - message indicating who won - profile picture? updates as game goes on? 
      - practice game feature where you play agianst \[name undecided\]? 
+     - replace outdated debug code best move uci display
