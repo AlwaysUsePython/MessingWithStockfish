@@ -408,6 +408,7 @@ startMoves = []
 for i in range(len(uci)-1):
     startMoves.append(uci[i])
 stockfish.set_position(startMoves)
+
 prevBestMove = stockfish.get_best_move()
 stockfish.make_moves_from_current_position([uci[len(uci)-1]])
 
@@ -461,8 +462,14 @@ while running:
                     stockfish.make_moves_from_current_position([str(uci[currentMove-1])])
                     #print("player move")
                     evalDifference = bestEval['value'] - stockfish.get_evaluation()['value']
+
                     if abs(evalDifference) > 100:
-                        goodMove = False
+                        if currentMove % 2 == 1:
+                            if evalDifference > 100:
+                                goodMove = False
+                        else:
+                            if evalDifference < -100:
+                                goodMove = False
                     else:
                         goodMove = True
                     #goodMove = judgeMove(uci, currentMove)
@@ -500,8 +507,13 @@ while running:
                 try:
                     pastMove = newMoves[-1]
                     deltaEval = currentEval['value'] - prevEval['value']
-                    if abs(deltaEval) >= 100:
-                        goodMove = False
+                    if abs(evalDifference) > 100:
+                        if currentMove % 2 == 1:
+                            if evalDifference > 100:
+                                goodMove = False
+                            else:
+                                if evalDifference < -100:
+                                    goodMove = False
                     elif str(pastMove) == computerMove:
                         goodMove = True
                     else:
