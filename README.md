@@ -10,7 +10,7 @@ hahahahahaha good luck. Either I'm stupid or setting up Stockfish in python is a
 
 First, you need a python IDE with the packages for chess, chess.com, pygame, and stockfish installed. All of that can be done through either pip or the pycharm interpreter interface with little trouble.
 
-Now the fun part: you need to download a version of stockfish. Copy the file path to one of the stockfish executable files into the code where it says stockfish = Stockfish(r'FILEPATH'). I'm using stockfish 11 cause that's the only one that I could get working (translation: that's the one that I could copy paste from an outdated StackOverflow post). And let's be real - both stockfish 11 and stockfish 15 would easily win all my games for me, so it doesn't really matter which one is doing the analysis.
+Now the fun part: you need to download a version of stockfish. Copy the file path to one of the stockfish executable files into the code where it says stockfish = Stockfish(r'FILEPATH'). I'm using stockfish 11 cause that's the only one that I could get working (translation: that's the one that I could copy paste from an outdated StackOverflow post). And let's be real - both stockfish 11 and stockfish 15 would easily win all my games for me, so it doesn't really matter which one is doing the analysis. Follow this stack exchange post if it isn't working: https://chess.stackexchange.com/questions/31995/unable-to-run-stockfish-on-python
 
 If that all works first try, you're a better programmer than I am!
 
